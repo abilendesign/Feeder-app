@@ -47,7 +47,9 @@ export default function InfoCard({
       <div className="max-h-[42vh] overflow-y-auto px-4 pb-4">
         {!hasData && (
           <p className="py-8 text-center text-sm text-neutral-400">
-            Aún no hay información.<br />Empieza a chatear o sube un documento. 👇
+            Aún no hay información.
+            <br />
+            Empieza a chatear o sube un documento.
           </p>
         )}
 
@@ -66,9 +68,12 @@ export default function InfoCard({
                 <button
                   onClick={() => onRemoveField(i)}
                   aria-label="Eliminar campo"
-                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-[10px] font-bold text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-700"
+                  className="absolute right-1.5 top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-red-600 text-white opacity-0 transition group-hover:opacity-100 hover:bg-red-700"
                 >
-                  ✕
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                    <line x1="6" y1="6" x2="18" y2="18" />
+                    <line x1="18" y1="6" x2="6" y2="18" />
+                  </svg>
                 </button>
               </div>
             ))}
@@ -78,7 +83,20 @@ export default function InfoCard({
         {/* Ubicación */}
         {card.location && (
           <div className="mt-2 flex items-start gap-2 rounded-xl bg-neutral-900 px-3 py-2 text-white">
-            <span className="mt-0.5 text-[#d6ff00]">📍</span>
+            <svg
+              className="mt-0.5 shrink-0 text-[#d6ff00]"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" />
+              <circle cx="12" cy="10" r="3" />
+            </svg>
             <div className="min-w-0">
               <p className="break-words text-sm font-medium">
                 {card.location.address}

@@ -119,3 +119,5 @@ La idea principal:
 | 2026-06-03 | GitHub autenticado (abilendesign) y push de `main` hecho. Código en github.com/abilendesign/Feeder-app. |
 | 2026-06-03 | Vercel conectado al repo (deploy automático). |
 | 2026-06-03 | IA real conectada: /api/chat con OpenAI (gpt-4o) Structured Outputs + Zod. Geocoding con Nominatim. Front llama al endpoint. Pendiente: poner OPENAI_API_KEY y NEXT_PUBLIC_MAPBOX_TOKEN en .env.local. |
+| 2026-06-03 | Token de Mapbox agregado a .env.local (mapa carga). |
+| 2026-06-03 | Tarjeta rediseñada (estilo moderno con chips + acento lima). Barra de entrada con Audio (MediaRecorder), Imagen y Escanear (cámara). Lectura real pendiente de la key de OpenAI. |

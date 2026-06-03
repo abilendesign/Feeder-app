@@ -31,7 +31,7 @@ export default function Home() {
       if (!res.ok) {
         setMessages((m) => [
           ...m,
-          { role: "assistant", content: `⚠️ ${data.error ?? "Error del servidor"}` },
+          { role: "assistant", content: data.error ?? "Error del servidor" },
         ]);
         return;
       }
@@ -44,7 +44,7 @@ export default function Home() {
     } catch {
       setMessages((m) => [
         ...m,
-        { role: "assistant", content: "⚠️ No se pudo conectar con el servidor." },
+        { role: "assistant", content: "No se pudo conectar con el servidor." },
       ]);
     } finally {
       setBusy(false);
@@ -55,7 +55,7 @@ export default function Home() {
     const kb = Math.round(blob.size / 1024);
     setMessages((m) => [
       ...m,
-      { role: "user", content: `🎤 Audio grabado (${kb} KB)` },
+      { role: "user", content: `Audio grabado (${kb} KB)` },
       {
         role: "assistant",
         content:
@@ -69,7 +69,7 @@ export default function Home() {
       ...m,
       {
         role: "user",
-        content: `${kind === "imagen" ? "🖼️ Imagen" : "📷 Escaneo"}: ${file.name}`,
+        content: `${kind === "imagen" ? "Imagen" : "Escaneo"}: ${file.name}`,
       },
       {
         role: "assistant",
