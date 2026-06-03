@@ -51,6 +51,34 @@ export default function Home() {
     }
   }
 
+  function handleAudio(blob: Blob) {
+    const kb = Math.round(blob.size / 1024);
+    setMessages((m) => [
+      ...m,
+      { role: "user", content: `🎤 Audio grabado (${kb} KB)` },
+      {
+        role: "assistant",
+        content:
+          "Audio recibido. La transcripción (OpenAI Speech-to-Text) se conecta cuando pongamos la key.",
+      },
+    ]);
+  }
+
+  function handleImage(file: File, kind: "imagen" | "escaneo") {
+    setMessages((m) => [
+      ...m,
+      {
+        role: "user",
+        content: `${kind === "imagen" ? "🖼️ Imagen" : "📷 Escaneo"}: ${file.name}`,
+      },
+      {
+        role: "assistant",
+        content:
+          "Archivo recibido. La lectura del documento (OpenAI visión) se conecta cuando pongamos la key.",
+      },
+    ]);
+  }
+
   return (
     <main className="flex h-screen flex-col">
       {/* MITAD SUPERIOR: mapa de fondo + tarjeta */}
@@ -72,7 +100,13 @@ export default function Home() {
 
       {/* MITAD INFERIOR: chatbot */}
       <section className="h-1/2 w-full">
-        <Chat messages={messages} onSend={handleSend} busy={busy} />
+        <Chat
+          messages={messages}
+          onSend={handleSend}
+          onAudio={handleAudio}
+          onImage={handleImage}
+          busy={busy}
+        />
       </section>
     </main>
   );

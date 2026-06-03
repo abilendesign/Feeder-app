@@ -117,3 +117,5 @@ La idea principal:
 | 2026-06-03 | Shell UI completo: layout 50/50 (mapa+tarjeta arriba, chat abajo). Mapa oscuro, pin #d6ff00, tarjeta blanca, botones rojos. Build OK. |
 | 2026-06-03 | Repo git iniciado + 1er commit. Remote: github.com/abilendesign/Feeder-app. Pendiente: gh auth login para push. |
 | 2026-06-03 | GitHub autenticado (abilendesign) y push de `main` hecho. Código en github.com/abilendesign/Feeder-app. |
+| 2026-06-03 | Vercel conectado al repo (deploy automático). |
+| 2026-06-03 | IA real conectada: /api/chat con OpenAI (gpt-4o) Structured Outputs + Zod. Geocoding con Nominatim. Front llama al endpoint. Pendiente: poner OPENAI_API_KEY y NEXT_PUBLIC_MAPBOX_TOKEN en .env.local. |
