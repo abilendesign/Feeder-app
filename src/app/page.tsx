@@ -14,32 +14,41 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // TODO: reemplazar este mock por /api/chat (OpenAI Structured Outputs).
-  function handleSend(text: string) {
-    setMessages((m) => [...m, { role: "user", content: text }]);
+  async function handleSend(text: string) {
+    const userMsg: ChatMessage = { role: "user", content: text };
+    const history = [...messages, userMsg];
+    setMessages(history);
     setBusy(true);
 
-    // Mock temporal: detecta "etiqueta: valor" y los agrega a la tarjeta.
-    const match = text.match(/^(.+?):\s*(.+)$/);
-    if (match) {
-      setCard((c) => ({
-        ...c,
-        fields: [...c.fields, { label: match[1].trim(), value: match[2].trim() }],
-      }));
-    }
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ messages: history, card }),
+      });
+      const data = await res.json();
 
-    setTimeout(() => {
+      if (!res.ok) {
+        setMessages((m) => [
+          ...m,
+          { role: "assistant", content: `⚠️ ${data.error ?? "Error del servidor"}` },
+        ]);
+        return;
+      }
+
+      setCard(data.card);
       setMessages((m) => [
         ...m,
-        {
-          role: "assistant",
-          content: match
-            ? `Anoté "${match[1].trim()}" en la tarjeta. ¿Algo más?`
-            : "Recibido. (La IA real se conecta cuando tengamos las API keys.)",
-        },
+        { role: "assistant", content: data.assistantMessage },
       ]);
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: "⚠️ No se pudo conectar con el servidor." },
+      ]);
+    } finally {
       setBusy(false);
-    }, 400);
+    }
   }
 
   return (

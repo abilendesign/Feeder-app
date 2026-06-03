@@ -112,3 +112,8 @@ La idea principal:
 | 2026-06-03 | Agregado el stack tecnológico definitivo y actualizados los pendientes. |
 | 2026-06-03 | Definido diseño/UI (layout 50/50, mapa oscuro, pines #d6ff00, tarjeta blanca, botones rojos). |
 | 2026-06-03 | Instaladas las CLIs de GitHub (gh 2.93.0) y Vercel (54.9.0). Pendiente login interactivo. |
+| 2026-06-03 | Vercel conectado (usuario: abilendesign). |
+| 2026-06-03 | Proyecto Next.js creado (TS, Tailwind, app router, src/). Deps: ai, openai, zod, supabase, mapbox-gl. |
+| 2026-06-03 | Shell UI completo: layout 50/50 (mapa+tarjeta arriba, chat abajo). Mapa oscuro, pin #d6ff00, tarjeta blanca, botones rojos. Build OK. |
+| 2026-06-03 | Repo git iniciado + 1er commit. Remote: github.com/abilendesign/Feeder-app. Pendiente: gh auth login para push. |
+| 2026-06-03 | GitHub autenticado (abilendesign) y push de `main` hecho. Código en github.com/abilendesign/Feeder-app. |
