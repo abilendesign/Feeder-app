@@ -1,15 +1,11 @@
-import OpenAI from "openai";
-import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
-import { zodResponseFormat } from "openai/helpers/zod";
+import { generateObject, type ModelMessage } from "ai";
 import { ExtractionSchema, type Card } from "@/lib/schema";
+import { modelNormal, modelHeavy } from "@/lib/ai";
 import { geocode } from "@/lib/geocode";
 
 export const runtime = "nodejs";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
-
-const MODEL_NORMAL = "gpt-5.4-mini";
-const MODEL_HEAVY = "gpt-5.5";
 
 const SYSTEM_PROMPT = `Eres el asistente de "Feeder", una app que escanea documentos por chat.
 Tu trabajo: conversar en español con el usuario para extraer y completar la información de un documento,
@@ -24,10 +20,9 @@ Reglas:
 - No inventes datos que el usuario no haya dado.`;
 
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return Response.json(
-      { error: "Falta OPENAI_API_KEY en el servidor" },
+      { error: "Falta GOOGLE_GENERATIVE_AI_API_KEY en el servidor" },
       { status: 500 }
     );
   }
@@ -39,42 +34,30 @@ export async function POST(req: Request) {
     heavy?: boolean;
   };
 
-  const openai = new OpenAI({ apiKey });
-  const model = heavy ? MODEL_HEAVY : MODEL_NORMAL;
+  const model = heavy ? modelHeavy : modelNormal;
 
-  const apiMessages: ChatCompletionMessageParam[] = [
-    { role: "system", content: SYSTEM_PROMPT },
-    {
-      role: "system",
-      content: `Estado actual de la tarjeta (JSON): ${JSON.stringify(card)}`,
-    },
-    ...messages,
-  ];
+  const aiMessages: ModelMessage[] = [...messages];
 
   if (image?.dataUrl) {
-    apiMessages.push({
+    aiMessages.push({
       role: "user",
       content: [
         {
           type: "text",
           text: `Documento adjunto (${image.kind}). Léelo y extrae toda la información para la tarjeta.`,
         },
-        { type: "image_url", image_url: { url: image.dataUrl } },
+        { type: "image", image: image.dataUrl },
       ],
     });
   }
 
   try {
-    const completion = await openai.chat.completions.parse({
+    const { object: parsed } = await generateObject({
       model,
-      messages: apiMessages,
-      response_format: zodResponseFormat(ExtractionSchema, "extraction"),
+      schema: ExtractionSchema,
+      system: `${SYSTEM_PROMPT}\n\nEstado actual de la tarjeta (JSON): ${JSON.stringify(card)}`,
+      messages: aiMessages,
     });
-
-    const parsed = completion.choices[0].message.parsed;
-    if (!parsed) {
-      return Response.json({ error: "No se pudo extraer" }, { status: 500 });
-    }
 
     const location = parsed.locationQuery
       ? await geocode(parsed.locationQuery)
@@ -90,10 +73,9 @@ export async function POST(req: Request) {
     return Response.json({
       assistantMessage: parsed.assistantMessage,
       card: updatedCard,
-      model,
     });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
-    return Response.json({ error: `OpenAI: ${msg}` }, { status: 500 });
+    return Response.json({ error: `IA: ${msg}` }, { status: 500 });
   }
 }

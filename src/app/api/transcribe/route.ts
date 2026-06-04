@@ -1,14 +1,12 @@
-import OpenAI, { toFile } from "openai";
+import { generateText } from "ai";
+import { modelTranscribe } from "@/lib/ai";
 
 export const runtime = "nodejs";
 
-const TRANSCRIBE_MODEL = "gpt-4o-mini-transcribe";
-
 export async function POST(req: Request) {
-  const apiKey = process.env.OPENAI_API_KEY;
-  if (!apiKey) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return Response.json(
-      { error: "Falta OPENAI_API_KEY en el servidor" },
+      { error: "Falta GOOGLE_GENERATIVE_AI_API_KEY en el servidor" },
       { status: 500 }
     );
   }
@@ -19,15 +17,29 @@ export async function POST(req: Request) {
     return Response.json({ error: "No se recibió audio" }, { status: 400 });
   }
 
-  const openai = new OpenAI({ apiKey });
+  const bytes = new Uint8Array(await blob.arrayBuffer());
 
   try {
-    const file = await toFile(blob, "audio.webm", { type: "audio/webm" });
-    const result = await openai.audio.transcriptions.create({
-      model: TRANSCRIBE_MODEL,
-      file,
+    const { text } = await generateText({
+      model: modelTranscribe,
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text: "Transcribe este audio. Devuelve solo el texto transcrito, sin comentarios ni explicaciones.",
+            },
+            {
+              type: "file",
+              data: bytes,
+              mediaType: blob.type || "audio/webm",
+            },
+          ],
+        },
+      ],
     });
-    return Response.json({ text: result.text });
+    return Response.json({ text: text.trim() });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
     return Response.json({ error: `Transcripción: ${msg}` }, { status: 500 });

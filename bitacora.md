@@ -55,7 +55,17 @@ La idea principal:
 | Transcripción de audio | `gpt-4o-mini-transcribe` o `gpt-4o-transcribe` |
 | Integración con Next.js | Vercel AI SDK + OpenAI |
 
-Lógica: `gpt-5.4-mini` por defecto; se escala a `gpt-5.5` cuando el documento es grande/desordenado (criterio de escalado por definir: automático por tamaño o manual).
+Lógica: modelo normal por defecto; se escala al modelo potente cuando el documento es grande/desordenado (automático: archivo > 1.5MB).
+
+> **CAMBIO (2026-06-04): se migra temporalmente de OpenAI a GEMINI (Google) para empezar GRATIS.** Más adelante se vuelve a OpenAI. Se usa el Vercel AI SDK (`@ai-sdk/google` / `@ai-sdk/openai`) para que el cambio de proveedor sea de 3 líneas en `src/lib/ai.ts`.
+>
+> | Uso | Modelo Gemini (actual) | Modelo OpenAI (futuro) |
+> |-----|------------------------|------------------------|
+> | Chat normal | `gemini-2.5-flash` | `gpt-5.4-mini` |
+> | Documentos grandes/difíciles | `gemini-2.5-pro` | `gpt-5.5` |
+> | Transcripción de audio | `gemini-2.5-flash` (multimodal) | `gpt-4o-mini-transcribe` |
+>
+> IDs de Gemini pendientes de verificar contra la API key de Google al conectar.
 
 > Pendiente al conectar: verificar que los IDs exactos respondan en la cuenta de OpenAI; si algún nombre no coincide, avisar y ajustar. Hoy el código usa `gpt-4o` como placeholder.
 
