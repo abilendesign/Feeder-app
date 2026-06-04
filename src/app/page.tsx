@@ -14,20 +14,30 @@ export default function Home() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
 
-  async function handleSend(text: string) {
-    const userMsg: ChatMessage = { role: "user", content: text };
-    const history = [...messages, userMsg];
+  // Envío central: texto y/o imagen al endpoint de chat.
+  async function sendToChat(opts: {
+    displayText: string;
+    image?: { dataUrl: string; kind: string };
+    heavy?: boolean;
+  }) {
+    const history = [
+      ...messages,
+      { role: "user", content: opts.displayText } as ChatMessage,
+    ];
     setMessages(history);
     setBusy(true);
-
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history, card }),
+        body: JSON.stringify({
+          messages: history,
+          card,
+          image: opts.image ?? null,
+          heavy: !!opts.heavy,
+        }),
       });
       const data = await res.json();
-
       if (!res.ok) {
         setMessages((m) => [
           ...m,
@@ -35,7 +45,6 @@ export default function Home() {
         ]);
         return;
       }
-
       setCard(data.card);
       setMessages((m) => [
         ...m,
@@ -51,32 +60,65 @@ export default function Home() {
     }
   }
 
-  function handleAudio(blob: Blob) {
-    const kb = Math.round(blob.size / 1024);
-    setMessages((m) => [
-      ...m,
-      { role: "user", content: `Audio grabado (${kb} KB)` },
-      {
-        role: "assistant",
-        content:
-          "Audio recibido. La transcripción (OpenAI Speech-to-Text) se conecta cuando pongamos la key.",
-      },
-    ]);
+  function handleSend(text: string) {
+    sendToChat({ displayText: text });
   }
 
-  function handleImage(file: File, kind: "imagen" | "escaneo") {
-    setMessages((m) => [
-      ...m,
-      {
-        role: "user",
-        content: `${kind === "imagen" ? "Imagen" : "Escaneo"}: ${file.name}`,
-      },
-      {
-        role: "assistant",
-        content:
-          "Archivo recibido. La lectura del documento (OpenAI visión) se conecta cuando pongamos la key.",
-      },
-    ]);
+  function fileToDataUrl(file: File) {
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  async function handleImage(file: File, kind: "imagen" | "escaneo") {
+    setBusy(true);
+    try {
+      const dataUrl = await fileToDataUrl(file);
+      // Documentos grandes -> escala a gpt-5.5.
+      const heavy = file.size > 1_500_000;
+      await sendToChat({
+        displayText: `${kind === "imagen" ? "Imagen" : "Escaneo"}: ${file.name}`,
+        image: { dataUrl, kind },
+        heavy,
+      });
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: "No se pudo leer el archivo." },
+      ]);
+      setBusy(false);
+    }
+  }
+
+  async function handleAudio(blob: Blob) {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("audio", blob, "audio.webm");
+      const res = await fetch("/api/transcribe", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok || !data.text) {
+        setMessages((m) => [
+          ...m,
+          {
+            role: "assistant",
+            content: data.error ?? "No se pudo transcribir el audio.",
+          },
+        ]);
+        setBusy(false);
+        return;
+      }
+      await sendToChat({ displayText: data.text });
+    } catch {
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", content: "No se pudo transcribir el audio." },
+      ]);
+      setBusy(false);
+    }
   }
 
   return (

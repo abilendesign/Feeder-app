@@ -44,6 +44,21 @@ La idea principal:
 | Geocoding | Nominatim para MVP, Google Geocoding para producción |
 | Hosting | Vercel |
 
+### Estrategia de modelos de IA (OpenAI) — APROBADA
+
+| Uso | Modelo |
+|-----|--------|
+| Chat principal | `gpt-5.4-mini` |
+| Documentos difíciles o muy desordenados | `gpt-5.5` |
+| Fotos / documentos / extracción de datos | `gpt-5.4-mini` o `gpt-5.5` |
+| JSON estructurado para llenar tarjeta | OpenAI Structured Outputs (+ Zod) |
+| Transcripción de audio | `gpt-4o-mini-transcribe` o `gpt-4o-transcribe` |
+| Integración con Next.js | Vercel AI SDK + OpenAI |
+
+Lógica: `gpt-5.4-mini` por defecto; se escala a `gpt-5.5` cuando el documento es grande/desordenado (criterio de escalado por definir: automático por tamaño o manual).
+
+> Pendiente al conectar: verificar que los IDs exactos respondan en la cuenta de OpenAI; si algún nombre no coincide, avisar y ajustar. Hoy el código usa `gpt-4o` como placeholder.
+
 ### Notas sobre el stack
 - **Entradas de información** (más allá del documento escaneado): texto del chat, **audio/voz** (MediaRecorder → transcripción con OpenAI Speech-to-Text) y **ubicación/mapa** (Mapbox/MapLibre + geocoding).
 - **Extracción estructurada**: la info se normaliza a **JSON** vía OpenAI Structured Outputs validado con **Zod** → esto alimenta la "tarjeta de información".
