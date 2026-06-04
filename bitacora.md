@@ -121,3 +121,7 @@ La idea principal:
 | 2026-06-03 | IA real conectada: /api/chat con OpenAI (gpt-4o) Structured Outputs + Zod. Geocoding con Nominatim. Front llama al endpoint. Pendiente: poner OPENAI_API_KEY y NEXT_PUBLIC_MAPBOX_TOKEN en .env.local. |
 | 2026-06-03 | Token de Mapbox agregado a .env.local (mapa carga). |
 | 2026-06-03 | Tarjeta rediseñada (estilo moderno con chips + acento lima). Barra de entrada con Audio (MediaRecorder), Imagen y Escanear (cámara). Lectura real pendiente de la key de OpenAI. |
+| 2026-06-03 | Quitados todos los emojis (preferencia del usuario): íconos SVG en botones, pin y eliminar. |
+| 2026-06-03 | Arreglado 404 en Vercel: framework estaba en null -> puesto a nextjs; desactivada Deployment Protection. App pública en https://feeder-app-tan.vercel.app. Token Mapbox agregado a env de producción. |
+| 2026-06-03 | Eliminados los proyectos Vercel duplicados. Solo queda `feeder-app` (https://feeder-app-tan.vercel.app). |
+| 2026-06-03 | Arreglado mapa que no cargaba en producción: la env var NEXT_PUBLIC_MAPBOX_TOKEN tenía un BOM (﻿) al inicio porque se cargó pipeando texto desde Windows PowerShell. Recargada limpia vía API de Vercel. LECCIÓN: nunca pipear valores a `vercel env add` desde PowerShell; usar la API o archivo. Mapa verificado OK en https://feeder-app-tan.vercel.app. |
