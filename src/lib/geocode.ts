@@ -1,10 +1,14 @@
-import type { Location } from "@/lib/schema";
+export type GeoResult = {
+  address: string;
+  latitude: number;
+  longitude: number;
+};
 
 /**
  * Geocoding con Nominatim (OpenStreetMap) para el MVP.
  * En producción se cambiará por Google Geocoding.
  */
-export async function geocode(query: string): Promise<Location | null> {
+export async function geocode(query: string): Promise<GeoResult | null> {
   const url =
     "https://nominatim.openstreetmap.org/search?format=json&limit=1&q=" +
     encodeURIComponent(query);
@@ -12,7 +16,6 @@ export async function geocode(query: string): Promise<Location | null> {
   try {
     const res = await fetch(url, {
       headers: {
-        // Nominatim exige un User-Agent identificable.
         "User-Agent": "FeederApp/0.1 (Abilendesign@gmail.com)",
       },
     });

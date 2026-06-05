@@ -3,20 +3,24 @@
 import { useEffect, useRef } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type { Location } from "@/lib/schema";
 
 const PIN_COLOR = "#d6ff00";
 const DARK_STYLE = "mapbox://styles/mapbox/dark-v11";
 const DEFAULT_CENTER: [number, number] = [-79.5199, 8.9824]; // Panamá
 
-export default function MapView({ location }: { location: Location | null }) {
+export default function MapView({
+  lat,
+  lng,
+}: {
+  lat: number | null;
+  lng: number | null;
+}) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<mapboxgl.Map | null>(null);
   const markerRef = useRef<mapboxgl.Marker | null>(null);
 
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
 
-  // Inicializa el mapa una sola vez.
   useEffect(() => {
     if (!token || !containerRef.current || mapRef.current) return;
     mapboxgl.accessToken = token;
@@ -32,18 +36,17 @@ export default function MapView({ location }: { location: Location | null }) {
     };
   }, [token]);
 
-  // Mueve / crea el pin en la ubicación exacta.
   useEffect(() => {
     const map = mapRef.current;
-    if (!map || !location) return;
-    const lngLat: [number, number] = [location.longitude, location.latitude];
+    if (!map || lat == null || lng == null) return;
+    const lngLat: [number, number] = [lng, lat];
 
     if (!markerRef.current) {
       markerRef.current = new mapboxgl.Marker({ color: PIN_COLOR });
     }
     markerRef.current.setLngLat(lngLat).addTo(map);
     map.flyTo({ center: lngLat, zoom: 15, essential: true });
-  }, [location]);
+  }, [lat, lng]);
 
   if (!token) {
     return (

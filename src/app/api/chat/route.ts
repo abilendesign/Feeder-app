@@ -1,5 +1,5 @@
 import { generateObject, type ModelMessage } from "ai";
-import { ExtractionSchema, type Card } from "@/lib/schema";
+import { PropertyExtractionSchema, type Card } from "@/lib/schema";
 import { modelNormal, modelHeavy } from "@/lib/ai";
 import { geocode } from "@/lib/geocode";
 
@@ -7,16 +7,17 @@ export const runtime = "nodejs";
 
 type ChatMessage = { role: "user" | "assistant"; content: string };
 
-const SYSTEM_PROMPT = `Eres el asistente de "Feeder", una app que escanea documentos por chat.
-Tu trabajo: conversar en español con el usuario para extraer y completar la información de un documento,
-y mantener actualizada una "tarjeta" estructurada.
+const SYSTEM_PROMPT = `Eres el asistente de "Feeder", una app inmobiliaria en Panamá.
+Conversas en español para capturar y completar los datos de una PROPIEDAD y mantener actualizada su tarjeta.
 
 Reglas:
-- Devuelve SIEMPRE el estado COMPLETO de la tarjeta (todos los campos acumulados hasta ahora), no solo lo nuevo.
-- "fields" son pares etiqueta/valor claros y bien organizados (ej: Nombre, Cédula, Monto, Fecha).
-- Si el usuario adjunta una imagen o documento, léelo y extrae todos los datos relevantes.
-- Si aparece una dirección o lugar, ponlo en "locationQuery" para ubicarlo en el mapa.
-- "assistantMessage" es breve y útil: confirma lo anotado y pregunta lo que falte.
+- Devuelve SIEMPRE el estado COMPLETO de la tarjeta; NO borres datos previos que ya tengan valor.
+- Campos a extraer: tipo de propiedad, operación (venta/alquiler), estado del anuncio, título,
+  precio y moneda, área en m², recámaras, baños, parking, condición, estado, descripción,
+  dirección y referencias de ubicación.
+- Si el usuario adjunta una imagen o documento, léelo y extrae todo lo relevante.
+- En "locationQuery" pon la mejor dirección/lugar (incluye ciudad y "Panamá") para ubicar en el mapa.
+- "assistantMessage": breve, confirma lo captado y pregunta lo que falte.
 - No inventes datos que el usuario no haya dado.`;
 
 export async function POST(req: Request) {
@@ -27,15 +28,15 @@ export async function POST(req: Request) {
     );
   }
 
-  const { messages, card, image, heavy } = (await req.json()) as {
+  const { messages, card, image, heavy, source } = (await req.json()) as {
     messages: ChatMessage[];
     card: Card;
     image?: { dataUrl: string; kind: string } | null;
     heavy?: boolean;
+    source?: string;
   };
 
   const model = heavy ? modelHeavy : modelNormal;
-
   const aiMessages: ModelMessage[] = [...messages];
 
   if (image?.dataUrl) {
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
       content: [
         {
           type: "text",
-          text: `Documento adjunto (${image.kind}). Léelo y extrae toda la información para la tarjeta.`,
+          text: `Documento adjunto (${image.kind}). Léelo y extrae toda la información de la propiedad.`,
         },
         { type: "image", image: image.dataUrl },
       ],
@@ -52,28 +53,40 @@ export async function POST(req: Request) {
   }
 
   try {
-    const { object: parsed } = await generateObject({
+    const { object: p } = await generateObject({
       model,
-      schema: ExtractionSchema,
+      schema: PropertyExtractionSchema,
       system: `${SYSTEM_PROMPT}\n\nEstado actual de la tarjeta (JSON): ${JSON.stringify(card)}`,
       messages: aiMessages,
     });
 
-    const location = parsed.locationQuery
-      ? await geocode(parsed.locationQuery)
-      : card.location;
+    const geo = p.locationQuery ? await geocode(p.locationQuery) : null;
 
+    // Merge: la IA actualiza/añade, nunca borra con null lo que ya existía.
     const updatedCard: Card = {
-      documentType: parsed.documentType,
-      summary: parsed.summary,
-      fields: parsed.fields,
-      location,
+      propertyType: p.propertyType ?? card.propertyType,
+      listingStatus: p.listingStatus ?? card.listingStatus,
+      operationType: p.operationType ?? card.operationType,
+      title: p.title ?? card.title,
+      price: p.price ?? card.price,
+      currency: p.currency ?? card.currency,
+      areaM2: p.areaM2 ?? card.areaM2,
+      bedrooms: p.bedrooms ?? card.bedrooms,
+      bathrooms: p.bathrooms ?? card.bathrooms,
+      parking: p.parking ?? card.parking,
+      condition: p.condition ?? card.condition,
+      status: p.status ?? card.status,
+      description: p.description ?? card.description,
+      addressText: p.addressText ?? geo?.address ?? card.addressText,
+      locationExtra: p.locationExtra ?? card.locationExtra,
+      lat: geo ? geo.latitude : card.lat,
+      lng: geo ? geo.longitude : card.lng,
+      photos: card.photos,
+      sourceType: source ?? card.sourceType ?? "chat",
+      detectedDate: p.detectedDate ?? card.detectedDate,
     };
 
-    return Response.json({
-      assistantMessage: parsed.assistantMessage,
-      card: updatedCard,
-    });
+    return Response.json({ assistantMessage: p.assistantMessage, card: updatedCard });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Error desconocido";
     return Response.json({ error: `IA: ${msg}` }, { status: 500 });

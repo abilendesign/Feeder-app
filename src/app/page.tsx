@@ -2,24 +2,28 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 import InfoCard from "@/components/InfoCard";
 import Chat, { type ChatMessage } from "@/components/Chat";
+import { createClient } from "@/lib/supabase/client";
 import { emptyCard, type Card } from "@/lib/schema";
 
-// El mapa solo corre en cliente (usa WebGL).
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function Home() {
+  const router = useRouter();
   const [card, setCard] = useState<Card>(emptyCard);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
 
-  // Envío central: texto y/o imagen al endpoint de chat.
   async function sendToChat(opts: {
     displayText: string;
+    baseCard?: Card;
     image?: { dataUrl: string; kind: string };
     heavy?: boolean;
+    source?: string;
   }) {
+    const base = opts.baseCard ?? card;
     const history = [
       ...messages,
       { role: "user", content: opts.displayText } as ChatMessage,
@@ -32,9 +36,10 @@ export default function Home() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           messages: history,
-          card,
+          card: base,
           image: opts.image ?? null,
           heavy: !!opts.heavy,
+          source: opts.source,
         }),
       });
       const data = await res.json();
@@ -61,7 +66,7 @@ export default function Home() {
   }
 
   function handleSend(text: string) {
-    sendToChat({ displayText: text });
+    sendToChat({ displayText: text, source: "chat" });
   }
 
   function fileToDataUrl(file: File) {
@@ -77,12 +82,18 @@ export default function Home() {
     setBusy(true);
     try {
       const dataUrl = await fileToDataUrl(file);
-      // Documentos grandes -> escala a gpt-5.5.
       const heavy = file.size > 1_500_000;
+      const base: Card = {
+        ...card,
+        photos: [...card.photos, { url: dataUrl, source: "documento" }],
+      };
+      setCard(base);
       await sendToChat({
         displayText: `${kind === "imagen" ? "Imagen" : "Escaneo"}: ${file.name}`,
+        baseCard: base,
         image: { dataUrl, kind },
         heavy,
+        source: "foto",
       });
     } catch {
       setMessages((m) => [
@@ -111,7 +122,7 @@ export default function Home() {
         setBusy(false);
         return;
       }
-      await sendToChat({ displayText: data.text });
+      await sendToChat({ displayText: data.text, source: "audio" });
     } catch {
       setMessages((m) => [
         ...m,
@@ -121,19 +132,33 @@ export default function Home() {
     }
   }
 
+  async function logout() {
+    await createClient().auth.signOut();
+    router.replace("/login");
+  }
+
   return (
     <main className="flex h-screen flex-col">
       {/* MITAD SUPERIOR: mapa de fondo + tarjeta */}
       <section className="relative h-1/2 w-full overflow-hidden">
-        <MapView location={card.location} />
+        <MapView lat={card.lat} lng={card.lng} />
+
+        <button
+          onClick={logout}
+          className="absolute left-3 top-3 z-10 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/15 hover:bg-black/80"
+        >
+          Salir
+        </button>
+
         <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4">
           <InfoCard
             card={card}
+            onChange={(patch) => setCard((c) => ({ ...c, ...patch }))}
             onClear={() => setCard(emptyCard)}
-            onRemoveField={(i) =>
+            onRemovePhoto={(i) =>
               setCard((c) => ({
                 ...c,
-                fields: c.fields.filter((_, idx) => idx !== i),
+                photos: c.photos.filter((_, idx) => idx !== i),
               }))
             }
           />
