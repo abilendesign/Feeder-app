@@ -8,14 +8,14 @@ type Patch = Partial<Card>;
 // ---------- campos editables reutilizables ----------
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block text-[9px] font-semibold uppercase tracking-wide text-neutral-500">
+    <span className="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
       {children}
     </span>
   );
 }
 
 const inputCls =
-  "w-full border-b border-neutral-200 bg-transparent py-0.5 text-xs text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]";
+  "w-full border-b border-neutral-200 bg-transparent py-1 text-[13px] text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]";
 
 function TextField({
   label,
@@ -86,8 +86,8 @@ function AreaField({
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
         placeholder={placeholder}
-        rows={2}
-        className="w-full resize-none rounded-md border border-neutral-200 bg-transparent p-1.5 text-xs text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]"
+        rows={3}
+        className="w-full resize-none rounded-md border border-neutral-200 bg-transparent p-2 text-[13px] text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]"
       />
     </label>
   );
@@ -95,7 +95,7 @@ function AreaField({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-t border-black/5 px-3 py-2">
+    <div className="border-t border-black/5 px-3.5 py-2.5">
       <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
         {title}
       </p>
@@ -119,17 +119,17 @@ export default function InfoCard({
   const ppm2 = pricePerM2(card);
 
   return (
-    <div className="pointer-events-auto flex max-h-[46vh] w-[300px] max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10">
+    <div className="pointer-events-auto flex max-h-[46vh] w-[340px] max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10 lg:max-h-[calc(100vh-2rem)] lg:w-[380px]">
       {/* 1. HEADER */}
       <div className="flex items-stretch">
         <div className="w-1.5 bg-[#d6ff00]" />
-        <div className="flex-1 px-3 py-2">
+        <div className="flex-1 px-3.5 py-2.5">
           <div className="flex items-start justify-between gap-2">
             <input
               value={card.propertyType ?? ""}
               onChange={(e) => onChange({ propertyType: e.target.value || null })}
               placeholder="Tipo de propiedad"
-              className="w-full bg-transparent text-sm font-bold text-black outline-none placeholder:text-neutral-400"
+              className="w-full bg-transparent text-base font-bold text-black outline-none placeholder:text-neutral-400"
             />
             <button
               onClick={onClear}
@@ -167,7 +167,7 @@ export default function InfoCard({
             value={card.title ?? ""}
             onChange={(e) => onChange({ title: e.target.value || null })}
             placeholder="Nombre de la propiedad"
-            className="w-full bg-transparent text-xs font-medium text-black outline-none placeholder:text-neutral-400"
+            className="w-full bg-transparent text-[13px] font-medium text-black outline-none placeholder:text-neutral-400"
           />
         </Section>
 
@@ -251,7 +251,7 @@ export default function InfoCard({
               {card.photos.map((p, i) => (
                 <div key={i} className="group relative overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt={`foto ${i + 1}`} className="h-14 w-full object-cover" />
+                  <img src={p.url} alt={`foto ${i + 1}`} className="h-16 w-full object-cover" />
                   <span className="absolute bottom-0 left-0 bg-black/60 px-1 text-[9px] text-white">
                     {p.source}
                   </span>
