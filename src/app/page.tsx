@@ -2,16 +2,13 @@
 
 import { useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
 import InfoCard from "@/components/InfoCard";
 import Chat, { type ChatMessage } from "@/components/Chat";
-import { createClient } from "@/lib/supabase/client";
 import { emptyCard, type Card } from "@/lib/schema";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
 export default function Home() {
-  const router = useRouter();
   const [card, setCard] = useState<Card>(emptyCard);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
@@ -132,23 +129,11 @@ export default function Home() {
     }
   }
 
-  async function logout() {
-    await createClient().auth.signOut();
-    router.replace("/login");
-  }
-
   return (
     <main className="flex h-screen flex-col">
       {/* MITAD SUPERIOR: mapa de fondo + tarjeta */}
       <section className="relative h-1/2 w-full overflow-hidden">
         <MapView lat={card.lat} lng={card.lng} />
-
-        <button
-          onClick={logout}
-          className="absolute left-3 top-3 z-10 rounded-lg bg-black/60 px-3 py-1.5 text-xs font-medium text-white ring-1 ring-white/15 hover:bg-black/80"
-        >
-          Salir
-        </button>
 
         <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4">
           <InfoCard
