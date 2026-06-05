@@ -106,9 +106,9 @@ export default function Chat({
   return (
     <div className="flex h-full flex-col bg-[#0a0a0a] text-neutral-100">
       {/* Mensajes */}
-      <div className="flex-1 space-y-3 overflow-y-auto px-4 py-4">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {messages.length === 0 && (
-          <p className="mt-8 text-center text-sm text-neutral-500">
+          <p className="mt-6 text-center text-xs text-neutral-500">
             Escribe, graba un audio, sube una imagen o escanea un documento.
           </p>
         )}
@@ -120,8 +120,8 @@ export default function Chat({
             <div
               className={
                 m.role === "user"
-                  ? "max-w-[80%] rounded-2xl rounded-br-sm bg-[#d6ff00] px-3 py-2 text-sm text-black"
-                  : "max-w-[80%] rounded-2xl rounded-bl-sm bg-neutral-800 px-3 py-2 text-sm"
+                  ? "max-w-[80%] rounded-2xl rounded-br-sm bg-[#d6ff00] px-2.5 py-1.5 text-xs text-black"
+                  : "max-w-[80%] rounded-2xl rounded-bl-sm bg-neutral-800 px-2.5 py-1.5 text-xs"
               }
             >
               {m.content}
@@ -132,11 +132,11 @@ export default function Chat({
       </div>
 
       {/* Barra de botones: audio, imagen, escanear */}
-      <div className="flex gap-2 border-t border-white/10 px-3 pt-3">
+      <div className="flex gap-1.5 border-t border-white/10 px-3 pt-2">
         <button
           type="button"
           onClick={toggleRecord}
-          className={`flex flex-1 items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-medium transition ${
+          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition ${
             recording
               ? "bg-red-600 text-white"
               : "bg-neutral-900 text-neutral-200 ring-1 ring-white/10 hover:bg-neutral-800"
@@ -149,7 +149,7 @@ export default function Chat({
         <button
           type="button"
           onClick={() => imageInputRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
         >
           <ImageIcon />
           Imagen
@@ -158,7 +158,7 @@ export default function Chat({
         <button
           type="button"
           onClick={() => scanInputRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-neutral-900 px-3 py-2 text-sm font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
+          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
         >
           <ScanIcon />
           Escanear
@@ -191,17 +191,17 @@ export default function Chat({
       </div>
 
       {/* Input de texto */}
-      <form onSubmit={submit} className="flex items-center gap-2 px-3 py-3">
+      <form onSubmit={submit} className="flex items-center gap-2 px-3 py-2.5">
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
           placeholder="Escribe un mensaje…"
-          className="flex-1 rounded-full bg-neutral-900 px-4 py-2 text-sm outline-none ring-1 ring-white/10 placeholder:text-neutral-600 focus:ring-[#d6ff00]/60"
+          className="flex-1 rounded-full bg-neutral-900 px-3.5 py-1.5 text-xs outline-none ring-1 ring-white/10 placeholder:text-neutral-600 focus:ring-[#d6ff00]/60"
         />
         <button
           type="submit"
           disabled={busy}
-          className="rounded-full bg-[#d6ff00] px-4 py-2 text-sm font-semibold text-black disabled:opacity-50"
+          className="rounded-full bg-[#d6ff00] px-3.5 py-1.5 text-xs font-semibold text-black disabled:opacity-50"
         >
           {busy ? "…" : "Enviar"}
         </button>

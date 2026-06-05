@@ -8,14 +8,14 @@ type Patch = Partial<Card>;
 // ---------- campos editables reutilizables ----------
 function Label({ children }: { children: React.ReactNode }) {
   return (
-    <span className="block text-[10px] font-semibold uppercase tracking-wide text-neutral-500">
+    <span className="block text-[9px] font-semibold uppercase tracking-wide text-neutral-500">
       {children}
     </span>
   );
 }
 
 const inputCls =
-  "w-full border-b border-neutral-200 bg-transparent py-1 text-sm text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]";
+  "w-full border-b border-neutral-200 bg-transparent py-0.5 text-xs text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]";
 
 function TextField({
   label,
@@ -86,8 +86,8 @@ function AreaField({
         value={value ?? ""}
         onChange={(e) => onChange(e.target.value || null)}
         placeholder={placeholder}
-        rows={3}
-        className="w-full resize-none rounded-md border border-neutral-200 bg-transparent p-2 text-sm text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]"
+        rows={2}
+        className="w-full resize-none rounded-md border border-neutral-200 bg-transparent p-1.5 text-xs text-black outline-none placeholder:text-neutral-400 focus:border-[#a9c400]"
       />
     </label>
   );
@@ -95,8 +95,8 @@ function AreaField({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="border-t border-black/5 px-4 py-3">
-      <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-neutral-400">
+    <div className="border-t border-black/5 px-3 py-2">
+      <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-neutral-400">
         {title}
       </p>
       {children}
@@ -119,31 +119,31 @@ export default function InfoCard({
   const ppm2 = pricePerM2(card);
 
   return (
-    <div className="pointer-events-auto flex max-h-[46vh] w-[400px] max-w-[92%] flex-col overflow-hidden rounded-2xl bg-white text-black shadow-2xl ring-1 ring-black/10">
+    <div className="pointer-events-auto flex max-h-[46vh] w-[300px] max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10">
       {/* 1. HEADER */}
       <div className="flex items-stretch">
         <div className="w-1.5 bg-[#d6ff00]" />
-        <div className="flex-1 px-4 py-3">
+        <div className="flex-1 px-3 py-2">
           <div className="flex items-start justify-between gap-2">
             <input
               value={card.propertyType ?? ""}
               onChange={(e) => onChange({ propertyType: e.target.value || null })}
               placeholder="Tipo de propiedad"
-              className="w-full bg-transparent text-base font-bold text-black outline-none placeholder:text-neutral-400"
+              className="w-full bg-transparent text-sm font-bold text-black outline-none placeholder:text-neutral-400"
             />
             <button
               onClick={onClear}
               aria-label="Eliminar tarjeta"
-              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white transition hover:bg-red-700"
+              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white transition hover:bg-red-700"
             >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
                 <line x1="10" y1="11" x2="10" y2="17" />
                 <line x1="14" y1="11" x2="14" y2="17" />
               </svg>
             </button>
           </div>
-          <div className="mt-2 grid grid-cols-2 gap-2">
+          <div className="mt-1.5 grid grid-cols-2 gap-1.5">
             <input
               value={card.operationType ?? ""}
               onChange={(e) => onChange({ operationType: e.target.value || null })}
@@ -167,7 +167,7 @@ export default function InfoCard({
             value={card.title ?? ""}
             onChange={(e) => onChange({ title: e.target.value || null })}
             placeholder="Nombre de la propiedad"
-            className="w-full bg-transparent text-sm font-medium text-black outline-none placeholder:text-neutral-400"
+            className="w-full bg-transparent text-xs font-medium text-black outline-none placeholder:text-neutral-400"
           />
         </Section>
 
@@ -251,7 +251,7 @@ export default function InfoCard({
               {card.photos.map((p, i) => (
                 <div key={i} className="group relative overflow-hidden rounded-lg">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src={p.url} alt={`foto ${i + 1}`} className="h-20 w-full object-cover" />
+                  <img src={p.url} alt={`foto ${i + 1}`} className="h-14 w-full object-cover" />
                   <span className="absolute bottom-0 left-0 bg-black/60 px-1 text-[9px] text-white">
                     {p.source}
                   </span>
