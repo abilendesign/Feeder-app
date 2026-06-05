@@ -131,8 +131,8 @@ export default function Home() {
 
   return (
     <main className="flex h-screen flex-col lg:flex-row">
-      {/* Mapa + tarjeta: arriba en móvil, a la DERECHA en PC/laptop */}
-      <section className="relative h-1/2 w-full overflow-hidden lg:order-2 lg:h-full lg:w-1/2">
+      {/* Mapa + tarjeta: arriba en móvil, a la DERECHA en PC/laptop. Prioriza la info. */}
+      <section className="relative h-3/5 w-full overflow-hidden lg:order-2 lg:h-full lg:w-2/3">
         <MapView lat={card.lat} lng={card.lng} />
 
         <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4">
@@ -150,8 +150,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chatbot: abajo en móvil, a la IZQUIERDA en PC/laptop */}
-      <section className="h-1/2 w-full lg:order-1 lg:h-full lg:w-1/2">
+      {/* Chatbot: abajo en móvil, a la IZQUIERDA en PC/laptop. Más pequeño. */}
+      <section className="h-2/5 w-full lg:order-1 lg:h-full lg:w-1/3">
         <Chat
           messages={messages}
           onSend={handleSend}
