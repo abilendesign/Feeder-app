@@ -166,7 +166,11 @@ export default function Home() {
       <section className={mapCls}>
         <MapView lat={card.lat} lng={card.lng} />
 
-        <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4">
+        <div
+          className={`pointer-events-none absolute inset-0 flex items-start p-4 ${
+            layout === "mobile" ? "justify-center" : "justify-end"
+          }`}
+        >
           <InfoCard
             card={card}
             layout={layout}
