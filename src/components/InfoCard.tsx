@@ -184,16 +184,24 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 // ---------- tarjeta ----------
 export default function InfoCard({
   card,
+  layout = "responsive",
   onChange,
   onClear,
   onRemovePhoto,
 }: {
   card: Card;
+  layout?: "responsive" | "mobile" | "pc";
   onChange: (patch: Patch) => void;
   onClear: () => void;
   onRemovePhoto: (index: number) => void;
 }) {
   const ppm2 = pricePerM2(card);
+  const sizeCls =
+    layout === "mobile"
+      ? "max-h-[46vh] w-[340px]"
+      : layout === "pc"
+        ? "max-h-[calc(100vh-2rem)] w-[380px]"
+        : "max-h-[46vh] w-[340px] lg:max-h-[calc(100vh-2rem)] lg:w-[380px]";
   const [collapsed, setCollapsed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -224,7 +232,7 @@ export default function InfoCard({
     "flex h-7 w-7 items-center justify-center rounded-lg text-neutral-600 ring-1 ring-black/10 transition hover:bg-neutral-100";
 
   return (
-    <div className="pointer-events-auto flex max-h-[46vh] w-[340px] max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10 lg:max-h-[calc(100vh-2rem)] lg:w-[380px]">
+    <div className={`pointer-events-auto flex ${sizeCls} max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10`}>
       {/* 1. HEADER */}
       <div className="flex items-stretch">
         <div className="w-1.5 bg-[#d6ff00]" />

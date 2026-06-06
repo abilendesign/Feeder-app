@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import InfoCard from "@/components/InfoCard";
 import Chat, { type ChatMessage } from "@/components/Chat";
@@ -8,10 +8,20 @@ import { emptyCard, type Card } from "@/lib/schema";
 
 const MapView = dynamic(() => import("@/components/MapView"), { ssr: false });
 
+type Layout = "responsive" | "mobile" | "pc";
+
 export default function Home() {
   const [card, setCard] = useState<Card>(emptyCard);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [busy, setBusy] = useState(false);
+
+  // El link feeder-celular fuerza vista móvil; feeder-pc fuerza vista PC.
+  const [layout, setLayout] = useState<Layout>("responsive");
+  useEffect(() => {
+    const h = window.location.hostname;
+    if (h.includes("celular")) setLayout("mobile");
+    else if (h.includes("feeder-pc")) setLayout("pc");
+  }, []);
 
   async function sendToChat(opts: {
     displayText: string;
@@ -129,15 +139,37 @@ export default function Home() {
     }
   }
 
-  return (
-    <main className="flex h-[100dvh] flex-col overflow-hidden lg:flex-row">
-      {/* Mapa + tarjeta: arriba en móvil, a la DERECHA en PC/laptop. Prioriza la info. */}
-      <section className="relative h-3/5 w-full overflow-hidden lg:order-2 lg:h-full lg:w-2/3">
+  const mainCls =
+    layout === "mobile"
+      ? "mx-auto flex h-[100dvh] w-full max-w-[430px] flex-col overflow-hidden"
+      : layout === "pc"
+        ? "flex h-[100dvh] flex-row overflow-hidden"
+        : "flex h-[100dvh] flex-col overflow-hidden lg:flex-row";
+
+  const mapCls =
+    layout === "mobile"
+      ? "relative h-3/5 w-full overflow-hidden"
+      : layout === "pc"
+        ? "relative order-2 h-full w-2/3 overflow-hidden"
+        : "relative h-3/5 w-full overflow-hidden lg:order-2 lg:h-full lg:w-2/3";
+
+  const chatCls =
+    layout === "mobile"
+      ? "h-2/5 w-full"
+      : layout === "pc"
+        ? "order-1 h-full w-1/3"
+        : "h-2/5 w-full lg:order-1 lg:h-full lg:w-1/3";
+
+  const content = (
+    <main className={mainCls}>
+      {/* Mapa + tarjeta */}
+      <section className={mapCls}>
         <MapView lat={card.lat} lng={card.lng} />
 
         <div className="pointer-events-none absolute inset-0 flex items-start justify-end p-4">
           <InfoCard
             card={card}
+            layout={layout}
             onChange={(patch) => setCard((c) => ({ ...c, ...patch }))}
             onClear={() => setCard(emptyCard)}
             onRemovePhoto={(i) =>
@@ -150,8 +182,8 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Chatbot: abajo en móvil, a la IZQUIERDA en PC/laptop. Más pequeño. */}
-      <section className="h-2/5 w-full lg:order-1 lg:h-full lg:w-1/3">
+      {/* Chatbot */}
+      <section className={chatCls}>
         <Chat
           messages={messages}
           onSend={handleSend}
@@ -162,4 +194,12 @@ export default function Home() {
       </section>
     </main>
   );
+
+  // En modo celular, encuadra la app como un teléfono (centrada).
+  if (layout === "mobile") {
+    return (
+      <div className="flex h-[100dvh] justify-center bg-black">{content}</div>
+    );
+  }
+  return content;
 }
