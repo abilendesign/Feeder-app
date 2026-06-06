@@ -1,9 +1,86 @@
 "use client";
 
+import { useState } from "react";
 import type { Card } from "@/lib/schema";
 import { pricePerM2 } from "@/lib/schema";
 
 type Patch = Partial<Card>;
+
+// ---------- texto exportable de la tarjeta ----------
+function cardToText(card: Card): string {
+  const ppm2 = pricePerM2(card);
+  const rows: [string, unknown][] = [
+    ["Tipo de propiedad", card.propertyType],
+    ["Operación", card.operationType],
+    ["Estado del anuncio", card.listingStatus],
+    ["Título", card.title],
+    ["Precio", card.price != null ? `${card.price} ${card.currency ?? ""}` : null],
+    ["Precio por m²", ppm2 != null ? `${ppm2} ${card.currency ?? ""}/m²` : null],
+    ["Área (m²)", card.areaM2],
+    ["Recámaras", card.bedrooms],
+    ["Baños", card.bathrooms],
+    ["Parking", card.parking],
+    ["Condición", card.condition],
+    ["Estado", card.status],
+    ["Descripción", card.description],
+    ["Dirección", card.addressText],
+    ["Texto extra", card.locationExtra],
+    [
+      "Coordenadas",
+      card.lat != null && card.lng != null ? `${card.lat}, ${card.lng}` : null,
+    ],
+    ["Fuente", card.sourceType],
+    ["Fecha detectada", card.detectedDate],
+  ];
+  const body = rows
+    .filter(([, v]) => v !== null && v !== undefined && v !== "")
+    .map(([k, v]) => `${k}: ${v}`)
+    .join("\n");
+  return `TARJETA DE PROPIEDAD\n\n${body}`;
+}
+
+// ---------- íconos ----------
+const ic = {
+  width: 15,
+  height: 15,
+  viewBox: "0 0 24 24",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round" as const,
+  strokeLinejoin: "round" as const,
+};
+function ChevronIcon({ open }: { open: boolean }) {
+  return (
+    <svg {...ic} style={{ transform: open ? "rotate(180deg)" : "none" }}>
+      <polyline points="6 9 12 15 18 9" />
+    </svg>
+  );
+}
+function CopyIcon() {
+  return (
+    <svg {...ic}>
+      <rect x="9" y="9" width="13" height="13" rx="2" />
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+    </svg>
+  );
+}
+function CheckIcon() {
+  return (
+    <svg {...ic}>
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
+  );
+}
+function DownloadIcon() {
+  return (
+    <svg {...ic}>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+      <polyline points="7 10 12 15 17 10" />
+      <line x1="12" y1="15" x2="12" y2="3" />
+    </svg>
+  );
+}
 
 // ---------- campos editables reutilizables ----------
 function Label({ children }: { children: React.ReactNode }) {
@@ -117,6 +194,34 @@ export default function InfoCard({
   onRemovePhoto: (index: number) => void;
 }) {
   const ppm2 = pricePerM2(card);
+  const [collapsed, setCollapsed] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  async function copy() {
+    try {
+      await navigator.clipboard.writeText(cardToText(card));
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      // navegador sin permiso de portapapeles
+    }
+  }
+
+  function download() {
+    const blob = new Blob([cardToText(card)], {
+      type: "text/plain;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${card.title || "tarjeta"}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  const iconBtn =
+    "flex h-7 w-7 items-center justify-center rounded-lg text-neutral-600 ring-1 ring-black/10 transition hover:bg-neutral-100";
 
   return (
     <div className="pointer-events-auto flex max-h-[46vh] w-[340px] max-w-[92%] flex-col overflow-hidden rounded-xl bg-white text-black shadow-2xl ring-1 ring-black/10 lg:max-h-[calc(100vh-2rem)] lg:w-[380px]">
@@ -131,17 +236,32 @@ export default function InfoCard({
               placeholder="Tipo de propiedad"
               className="w-full bg-transparent text-base font-bold text-black outline-none placeholder:text-neutral-400"
             />
-            <button
-              onClick={onClear}
-              aria-label="Eliminar tarjeta"
-              className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-red-600 text-white transition hover:bg-red-700"
-            >
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
-                <line x1="10" y1="11" x2="10" y2="17" />
-                <line x1="14" y1="11" x2="14" y2="17" />
-              </svg>
-            </button>
+            <div className="flex shrink-0 items-center gap-1">
+              <button
+                onClick={() => setCollapsed(!collapsed)}
+                aria-label={collapsed ? "Abrir tarjeta" : "Cerrar tarjeta"}
+                className={iconBtn}
+              >
+                <ChevronIcon open={!collapsed} />
+              </button>
+              <button onClick={copy} aria-label="Copiar" className={iconBtn}>
+                {copied ? <CheckIcon /> : <CopyIcon />}
+              </button>
+              <button onClick={download} aria-label="Descargar" className={iconBtn}>
+                <DownloadIcon />
+              </button>
+              <button
+                onClick={() => setConfirmDelete(true)}
+                aria-label="Eliminar tarjeta"
+                className="flex h-7 w-7 items-center justify-center rounded-lg bg-red-600 text-white transition hover:bg-red-700"
+              >
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" />
+                  <line x1="10" y1="11" x2="10" y2="17" />
+                  <line x1="14" y1="11" x2="14" y2="17" />
+                </svg>
+              </button>
+            </div>
           </div>
           <div className="mt-1.5 grid grid-cols-2 gap-1.5">
             <input
@@ -160,6 +280,31 @@ export default function InfoCard({
         </div>
       </div>
 
+      {confirmDelete && (
+        <div className="flex items-center justify-between gap-2 bg-red-50 px-3.5 py-2 text-xs text-red-800">
+          <span>¿Eliminar toda la información de la tarjeta?</span>
+          <div className="flex shrink-0 gap-2">
+            <button
+              onClick={() => {
+                onClear();
+                setConfirmDelete(false);
+                setCollapsed(false);
+              }}
+              className="rounded bg-red-600 px-2 py-1 font-medium text-white hover:bg-red-700"
+            >
+              Eliminar
+            </button>
+            <button
+              onClick={() => setConfirmDelete(false)}
+              className="rounded bg-white px-2 py-1 font-medium ring-1 ring-black/10 hover:bg-neutral-100"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {!collapsed && (
       <div className="overflow-y-auto">
         {/* 2. TÍTULO */}
         <Section title="Título">
@@ -289,6 +434,7 @@ export default function InfoCard({
           </div>
         </Section>
       </div>
+      )}
     </div>
   );
 }

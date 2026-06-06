@@ -27,7 +27,6 @@ function MicIcon() {
     </svg>
   );
 }
-
 function ImageIcon() {
   return (
     <svg {...iconProps}>
@@ -37,7 +36,6 @@ function ImageIcon() {
     </svg>
   );
 }
-
 function ScanIcon() {
   return (
     <svg {...iconProps}>
@@ -48,6 +46,12 @@ function ScanIcon() {
       <line x1="7" y1="12" x2="17" y2="12" />
     </svg>
   );
+}
+
+function fmt(s: number) {
+  const m = Math.floor(s / 60);
+  const ss = s % 60;
+  return `${m}:${ss.toString().padStart(2, "0")}`;
 }
 
 export default function Chat({
@@ -65,48 +69,74 @@ export default function Chat({
 }) {
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
+  const [seconds, setSeconds] = useState(0);
   const endRef = useRef<HTMLDivElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
+  const cancelRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const scanInputRef = useRef<HTMLInputElement>(null);
 
-  function submit(e: React.FormEvent) {
-    e.preventDefault();
-    const text = input.trim();
-    if (!text || busy) return;
-    onSend(text);
-    setInput("");
-    setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 0);
+  function stopTimer() {
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
   }
 
-  async function toggleRecord() {
-    if (recording) {
-      recorderRef.current?.stop();
-      return;
-    }
+  async function startRecording() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const rec = new MediaRecorder(stream);
       chunksRef.current = [];
+      cancelRef.current = false;
       rec.ondataavailable = (ev) => ev.data.size && chunksRef.current.push(ev.data);
       rec.onstop = () => {
         stream.getTracks().forEach((t) => t.stop());
+        stopTimer();
         setRecording(false);
-        onAudio(new Blob(chunksRef.current, { type: "audio/webm" }));
+        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        const cancelled = cancelRef.current;
+        setSeconds(0);
+        if (!cancelled && blob.size > 0) onAudio(blob);
       };
       recorderRef.current = rec;
       rec.start();
       setRecording(true);
+      setSeconds(0);
+      timerRef.current = setInterval(() => setSeconds((s) => s + 1), 1000);
     } catch {
       alert("No se pudo acceder al micrófono.");
     }
   }
 
+  function stopAndSend() {
+    cancelRef.current = false;
+    recorderRef.current?.stop();
+  }
+
+  function cancelRecording() {
+    cancelRef.current = true;
+    recorderRef.current?.stop();
+  }
+
+  function submit(e: React.FormEvent) {
+    e.preventDefault();
+    // Si está grabando, "Enviar" también detiene y manda el audio.
+    if (recording) stopAndSend();
+    const text = input.trim();
+    if (text && !busy) {
+      onSend(text);
+      setInput("");
+    }
+    setTimeout(() => endRef.current?.scrollIntoView({ behavior: "smooth" }), 0);
+  }
+
   return (
-    <div className="flex h-full flex-col bg-[#0a0a0a] text-neutral-100">
+    <div className="flex h-full min-h-0 flex-col bg-[#0a0a0a] text-neutral-100">
       {/* Mensajes */}
-      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-3">
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto px-3 py-3">
         {messages.length === 0 && (
           <p className="mt-6 text-center text-xs text-neutral-500">
             Escribe, graba un audio, sube una imagen o escanea un documento.
@@ -131,64 +161,82 @@ export default function Chat({
         <div ref={endRef} />
       </div>
 
-      {/* Barra de botones: audio, imagen, escanear */}
-      <div className="flex gap-1.5 border-t border-white/10 px-3 pt-2">
-        <button
-          type="button"
-          onClick={toggleRecord}
-          className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs font-medium transition ${
-            recording
-              ? "bg-red-600 text-white"
-              : "bg-neutral-900 text-neutral-200 ring-1 ring-white/10 hover:bg-neutral-800"
-          }`}
-        >
-          <MicIcon />
-          {recording ? "Detener" : "Audio"}
-        </button>
+      {/* Barra: grabando o botones normales */}
+      {recording ? (
+        <div className="flex items-center gap-1.5 border-t border-white/10 px-3 pt-2">
+          <span className="flex flex-1 items-center gap-2 rounded-lg bg-neutral-900 px-3 py-1.5 ring-1 ring-white/10">
+            <span className="h-2 w-2 animate-pulse rounded-full bg-red-600" />
+            <span className="text-xs tabular-nums text-neutral-200">{fmt(seconds)}</span>
+            <span className="text-xs text-neutral-500">Grabando…</span>
+          </span>
+          <button
+            type="button"
+            onClick={cancelRecording}
+            className="rounded-lg bg-neutral-800 px-3 py-1.5 text-xs font-medium text-red-400 ring-1 ring-white/10 hover:bg-neutral-700"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            onClick={stopAndSend}
+            className="rounded-lg bg-[#d6ff00] px-3 py-1.5 text-xs font-semibold text-black"
+          >
+            Detener y enviar
+          </button>
+        </div>
+      ) : (
+        <div className="flex gap-1.5 border-t border-white/10 px-3 pt-2">
+          <button
+            type="button"
+            onClick={startRecording}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
+          >
+            <MicIcon />
+            Audio
+          </button>
+          <button
+            type="button"
+            onClick={() => imageInputRef.current?.click()}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
+          >
+            <ImageIcon />
+            Imagen
+          </button>
+          <button
+            type="button"
+            onClick={() => scanInputRef.current?.click()}
+            className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
+          >
+            <ScanIcon />
+            Escanear
+          </button>
+        </div>
+      )}
 
-        <button
-          type="button"
-          onClick={() => imageInputRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
-        >
-          <ImageIcon />
-          Imagen
-        </button>
-
-        <button
-          type="button"
-          onClick={() => scanInputRef.current?.click()}
-          className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
-        >
-          <ScanIcon />
-          Escanear
-        </button>
-
-        {/* inputs ocultos */}
-        <input
-          ref={imageInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onImage(f, "imagen");
-            e.target.value = "";
-          }}
-        />
-        <input
-          ref={scanInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="hidden"
-          onChange={(e) => {
-            const f = e.target.files?.[0];
-            if (f) onImage(f, "escaneo");
-            e.target.value = "";
-          }}
-        />
-      </div>
+      {/* inputs ocultos */}
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onImage(f, "imagen");
+          e.target.value = "";
+        }}
+      />
+      <input
+        ref={scanInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) onImage(f, "escaneo");
+          e.target.value = "";
+        }}
+      />
 
       {/* Input de texto */}
       <form onSubmit={submit} className="flex items-center gap-2 px-3 py-2.5">

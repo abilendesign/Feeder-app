@@ -130,7 +130,7 @@ export default function Home() {
   }
 
   return (
-    <main className="flex h-screen flex-col lg:flex-row">
+    <main className="flex h-[100dvh] flex-col overflow-hidden lg:flex-row">
       {/* Mapa + tarjeta: arriba en móvil, a la DERECHA en PC/laptop. Prioriza la info. */}
       <section className="relative h-3/5 w-full overflow-hidden lg:order-2 lg:h-full lg:w-2/3">
         <MapView lat={card.lat} lng={card.lng} />
