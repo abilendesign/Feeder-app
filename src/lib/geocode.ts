@@ -37,3 +37,21 @@ export async function geocode(query: string): Promise<GeoResult | null> {
     return null;
   }
 }
+
+/** Coordenadas -> dirección (reverse geocoding con Nominatim). */
+export async function reverseGeocode(
+  lat: number,
+  lng: number
+): Promise<string | null> {
+  const url = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`;
+  try {
+    const res = await fetch(url, {
+      headers: { "User-Agent": "FeederApp/0.1 (Abilendesign@gmail.com)" },
+    });
+    if (!res.ok) return null;
+    const data = (await res.json()) as { display_name?: string };
+    return data.display_name ?? null;
+  } catch {
+    return null;
+  }
+}

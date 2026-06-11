@@ -205,6 +205,35 @@ export default function InfoCard({
   const [collapsed, setCollapsed] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [locating, setLocating] = useState(false);
+
+  function useMyLocation() {
+    if (!navigator.geolocation) {
+      alert("Tu navegador no soporta geolocalización.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+        onChange({ lat, lng });
+        try {
+          const res = await fetch(`/api/reverse?lat=${lat}&lng=${lng}`);
+          const data = await res.json();
+          if (data.address) onChange({ addressText: data.address });
+        } catch {
+          // sin reverse-geocoding; el pin igual queda puesto
+        }
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        alert("No se pudo obtener tu ubicación. Revisa los permisos del navegador.");
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
+  }
 
   async function copy() {
     try {
@@ -387,6 +416,18 @@ export default function InfoCard({
               onChange={(v) => onChange({ locationExtra: v })}
               placeholder="Referencias, barrio..."
             />
+            <button
+              type="button"
+              onClick={useMyLocation}
+              disabled={locating}
+              className="flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#d6ff00] px-2 py-1.5 text-xs font-semibold text-black transition hover:brightness-95 disabled:opacity-60"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="12" cy="12" r="3" />
+                <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+              </svg>
+              {locating ? "Obteniendo ubicación..." : "Usar mi ubicación actual"}
+            </button>
             <p className="text-[11px] text-neutral-400">
               {card.lat != null && card.lng != null
                 ? `Pin: ${card.lat.toFixed(5)}, ${card.lng.toFixed(5)}`
