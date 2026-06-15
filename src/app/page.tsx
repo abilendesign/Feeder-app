@@ -19,6 +19,46 @@ export default function Home() {
   const [busy, setBusy] = useState(false);
   const [savedId, setSavedId] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [hydrated, setHydrated] = useState(false);
+
+  // Restaura chat + tarjeta al volver de otra pestaña (ej. Perfil) o al refrescar.
+  useEffect(() => {
+    try {
+      const c = localStorage.getItem("feeder_card");
+      const m = localStorage.getItem("feeder_messages");
+      const sid = localStorage.getItem("feeder_savedId");
+      if (c) setCard(JSON.parse(c));
+      if (m) setMessages(JSON.parse(m));
+      if (sid) setSavedId(sid);
+    } catch {
+      // ignora datos corruptos
+    }
+    setHydrated(true);
+  }, []);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem("feeder_card", JSON.stringify(card));
+    } catch {
+      // localStorage lleno (fotos grandes): no es crítico
+    }
+  }, [card, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    try {
+      localStorage.setItem("feeder_messages", JSON.stringify(messages));
+    } catch {
+      // ignora
+    }
+  }, [messages, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    if (savedId) localStorage.setItem("feeder_savedId", savedId);
+    else localStorage.removeItem("feeder_savedId");
+  }, [savedId, hydrated]);
 
   async function saveCard() {
     setSaveState("saving");

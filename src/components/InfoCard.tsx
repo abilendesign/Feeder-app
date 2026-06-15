@@ -248,6 +248,21 @@ export default function InfoCard({
     );
   }
 
+  // Al escribir una dirección y salir del campo: geocodifica y mueve el mapa.
+  async function geocodeAddress() {
+    const q = card.addressText?.trim();
+    if (!q) return;
+    try {
+      const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
+      const d = await res.json();
+      if (d.lat != null && d.lng != null) {
+        onChange({ lat: d.lat, lng: d.lng, addressText: d.address ?? q });
+      }
+    } catch {
+      // sin conexión de geocoding; no pasa nada
+    }
+  }
+
   async function copy() {
     try {
       await navigator.clipboard.writeText(cardToText(card));
@@ -432,12 +447,16 @@ export default function InfoCard({
         {/* 6. UBICACIÓN */}
         <Section title="Ubicación">
           <div className="space-y-2">
-            <TextField
-              label="Dirección"
-              value={card.addressText}
-              onChange={(v) => onChange({ addressText: v })}
-              placeholder="Dirección"
-            />
+            <label className="block">
+              <Label>Dirección</Label>
+              <input
+                value={card.addressText ?? ""}
+                onChange={(e) => onChange({ addressText: e.target.value || null })}
+                onBlur={geocodeAddress}
+                placeholder="Dirección (al salir, ubica en el mapa)"
+                className={inputCls}
+              />
+            </label>
             <TextField
               label="Texto extra"
               value={card.locationExtra}
