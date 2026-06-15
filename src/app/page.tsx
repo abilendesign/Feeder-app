@@ -111,10 +111,49 @@ export default function Home() {
     });
   }
 
+  // Reduce y comprime la imagen (evita el límite de tamaño de Vercel y mejora la visión).
+  function resizeImage(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const maxDim = 1600;
+        let { width, height } = img;
+        if (width > maxDim || height > maxDim) {
+          const scale = maxDim / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          reject(new Error("no ctx"));
+          return;
+        }
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("img load"));
+      };
+      img.src = url;
+    });
+  }
+
   async function handleImage(file: File, kind: "imagen" | "escaneo") {
     setBusy(true);
     try {
-      const dataUrl = await fileToDataUrl(file);
+      // Intenta comprimir; si falla, manda el original.
+      let dataUrl: string;
+      try {
+        dataUrl = await resizeImage(file);
+      } catch {
+        dataUrl = await fileToDataUrl(file);
+      }
       const heavy = file.size > 1_500_000;
       const base: Card = {
         ...card,
