@@ -115,7 +115,7 @@ export default function Home() {
     setBusy(true);
     try {
       const fd = new FormData();
-      fd.append("audio", blob, "audio.webm");
+      fd.append("audio", blob, blob.type.includes("wav") ? "audio.wav" : "audio.webm");
       const res = await fetch("/api/transcribe", { method: "POST", body: fd });
       const data = await res.json();
       if (!res.ok || !data.text) {

@@ -2,6 +2,7 @@ import { generateText } from "ai";
 import { modelTranscribe } from "@/lib/ai";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 
 export async function POST(req: Request) {
   if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {

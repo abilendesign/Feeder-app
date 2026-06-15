@@ -54,6 +54,60 @@ function fmt(s: number) {
   return `${m}:${ss.toString().padStart(2, "0")}`;
 }
 
+// El navegador graba en webm/opus, pero Gemini transcribe mejor WAV.
+// Convertimos en el cliente para garantizar compatibilidad.
+function encodeWav(audioBuffer: AudioBuffer): Blob {
+  const sampleRate = audioBuffer.sampleRate;
+  const data = audioBuffer.getChannelData(0); // mono (canal 0)
+  const len = data.length;
+  const buf = new ArrayBuffer(44 + len * 2);
+  const view = new DataView(buf);
+  let o = 0;
+  const str = (s: string) => {
+    for (let i = 0; i < s.length; i++) view.setUint8(o++, s.charCodeAt(i));
+  };
+  str("RIFF");
+  view.setUint32(o, 36 + len * 2, true);
+  o += 4;
+  str("WAVE");
+  str("fmt ");
+  view.setUint32(o, 16, true);
+  o += 4;
+  view.setUint16(o, 1, true);
+  o += 2;
+  view.setUint16(o, 1, true);
+  o += 2;
+  view.setUint32(o, sampleRate, true);
+  o += 4;
+  view.setUint32(o, sampleRate * 2, true);
+  o += 4;
+  view.setUint16(o, 2, true);
+  o += 2;
+  view.setUint16(o, 16, true);
+  o += 2;
+  str("data");
+  view.setUint32(o, len * 2, true);
+  o += 4;
+  for (let i = 0; i < len; i++) {
+    const s = Math.max(-1, Math.min(1, data[i]));
+    view.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    o += 2;
+  }
+  return new Blob([buf], { type: "audio/wav" });
+}
+
+async function blobToWav(blob: Blob): Promise<Blob> {
+  const arrayBuf = await blob.arrayBuffer();
+  const AC =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: typeof AudioContext })
+      .webkitAudioContext;
+  const ctx = new AC();
+  const audioBuf = await ctx.decodeAudioData(arrayBuf);
+  ctx.close();
+  return encodeWav(audioBuf);
+}
+
 export default function Chat({
   messages,
   onSend,
@@ -92,14 +146,20 @@ export default function Chat({
       chunksRef.current = [];
       cancelRef.current = false;
       rec.ondataavailable = (ev) => ev.data.size && chunksRef.current.push(ev.data);
-      rec.onstop = () => {
+      rec.onstop = async () => {
         stream.getTracks().forEach((t) => t.stop());
         stopTimer();
         setRecording(false);
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
         const cancelled = cancelRef.current;
         setSeconds(0);
-        if (!cancelled && blob.size > 0) onAudio(blob);
+        if (cancelled) return;
+        const webm = new Blob(chunksRef.current, { type: "audio/webm" });
+        if (webm.size === 0) return;
+        try {
+          onAudio(await blobToWav(webm));
+        } catch {
+          onAudio(webm); // si falla la conversión, manda el original
+        }
       };
       recorderRef.current = rec;
       rec.start();
