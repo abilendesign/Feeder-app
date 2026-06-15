@@ -7,6 +7,8 @@ export default function LogoutButton() {
   const router = useRouter();
   async function logout() {
     await createClient().auth.signOut();
+    // Limpia también la marca de "omitir" para volver al login.
+    document.cookie = "feeder_skip=; path=/; max-age=0";
     router.replace("/login");
   }
   return (

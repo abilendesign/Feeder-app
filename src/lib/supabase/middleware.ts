@@ -33,8 +33,9 @@ export async function updateSession(request: NextRequest) {
   const path = request.nextUrl.pathname;
   const isAuthRoute = path.startsWith("/login");
   const isApi = path.startsWith("/api");
+  const skipped = request.cookies.get("feeder_skip")?.value === "1";
 
-  if (!user && !isAuthRoute && !isApi) {
+  if (!user && !skipped && !isAuthRoute && !isApi) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     return NextResponse.redirect(url);

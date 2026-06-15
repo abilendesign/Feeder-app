@@ -40,7 +40,16 @@ export default async function Perfil() {
           </svg>
           Volver al chat
         </Link>
-        <LogoutButton />
+        {user ? (
+          <LogoutButton />
+        ) : (
+          <Link
+            href="/login"
+            className="rounded-lg bg-[#d6ff00] px-3 py-1.5 text-xs font-semibold text-black hover:brightness-95"
+          >
+            Iniciar sesión
+          </Link>
+        )}
       </header>
 
       {/* Info de usuario */}

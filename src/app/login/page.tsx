@@ -33,17 +33,10 @@ export default function LoginPage() {
     setBusy(false);
   }
 
-  async function guest() {
-    setBusy(true);
-    setMsg(null);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInAnonymously();
-    if (error)
-      setMsg(
-        `${error.message}. Habilita "Anonymous sign-ins" en Supabase → Authentication.`
-      );
-    else router.replace("/");
-    setBusy(false);
+  function skip() {
+    // Marca para saltarse el login (sin crear cuenta). Sin sesión no se guarda.
+    document.cookie = "feeder_skip=1; path=/; max-age=2592000; samesite=lax";
+    router.replace("/");
   }
 
   return (
@@ -93,9 +86,8 @@ export default function LoginPage() {
         </div>
 
         <button
-          onClick={guest}
-          disabled={busy}
-          className="w-full rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-200 ring-1 ring-white/10 hover:bg-neutral-700 disabled:opacity-50"
+          onClick={skip}
+          className="w-full rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-200 ring-1 ring-white/10 hover:bg-neutral-700"
         >
           Omitir
         </button>
