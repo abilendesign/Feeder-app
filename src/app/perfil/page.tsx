@@ -23,7 +23,7 @@ export default async function Perfil() {
     .order("created_at", { ascending: false });
 
   const cards = (data ?? []) as Row[];
-  const username = user?.email ?? "Usuario";
+  const username = user?.email ?? "Invitado";
   const count = cards.length;
 
   return (

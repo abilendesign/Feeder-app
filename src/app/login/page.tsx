@@ -33,6 +33,19 @@ export default function LoginPage() {
     setBusy(false);
   }
 
+  async function guest() {
+    setBusy(true);
+    setMsg(null);
+    const supabase = createClient();
+    const { error } = await supabase.auth.signInAnonymously();
+    if (error)
+      setMsg(
+        `${error.message}. Habilita "Anonymous sign-ins" en Supabase → Authentication.`
+      );
+    else router.replace("/");
+    setBusy(false);
+  }
+
   return (
     <main className="flex min-h-[100dvh] items-center justify-center bg-[#0a0a0a] px-4 text-neutral-100">
       <div className="w-full max-w-sm rounded-2xl bg-neutral-900 p-6 ring-1 ring-white/10">
@@ -74,6 +87,18 @@ export default function LoginPage() {
             {busy ? "..." : mode === "login" ? "Entrar" : "Registrarme"}
           </button>
         </form>
+
+        <div className="my-4 flex items-center gap-3 text-[11px] text-neutral-600">
+          <span className="h-px flex-1 bg-white/10" />o<span className="h-px flex-1 bg-white/10" />
+        </div>
+
+        <button
+          onClick={guest}
+          disabled={busy}
+          className="w-full rounded-lg bg-neutral-800 px-3 py-2 text-sm font-medium text-neutral-200 ring-1 ring-white/10 hover:bg-neutral-700 disabled:opacity-50"
+        >
+          Entrar como invitado
+        </button>
 
         <button
           onClick={() => {
