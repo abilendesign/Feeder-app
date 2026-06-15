@@ -81,6 +81,15 @@ function DownloadIcon() {
     </svg>
   );
 }
+function SaveIcon() {
+  return (
+    <svg {...ic}>
+      <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z" />
+      <polyline points="17 21 17 13 7 13 7 21" />
+      <polyline points="7 3 7 8 15 8" />
+    </svg>
+  );
+}
 
 // ---------- campos editables reutilizables ----------
 function Label({ children }: { children: React.ReactNode }) {
@@ -185,12 +194,16 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 export default function InfoCard({
   card,
   layout = "responsive",
+  saveState = "idle",
+  onSave,
   onChange,
   onClear,
   onRemovePhoto,
 }: {
   card: Card;
   layout?: "responsive" | "mobile" | "pc";
+  saveState?: "idle" | "saving" | "saved" | "error";
+  onSave?: () => void;
   onChange: (patch: Patch) => void;
   onClear: () => void;
   onRemovePhoto: (index: number) => void;
@@ -274,6 +287,21 @@ export default function InfoCard({
               className="w-full bg-transparent text-base font-bold text-black outline-none placeholder:text-neutral-400"
             />
             <div className="flex shrink-0 items-center gap-1">
+              {onSave && (
+                <button
+                  onClick={onSave}
+                  disabled={saveState === "saving"}
+                  aria-label="Guardar"
+                  title={saveState === "error" ? "Error al guardar" : "Guardar"}
+                  className={
+                    saveState === "error"
+                      ? "flex h-7 w-7 items-center justify-center rounded-lg text-red-600 ring-1 ring-red-200 hover:bg-red-50"
+                      : iconBtn
+                  }
+                >
+                  {saveState === "saved" ? <CheckIcon /> : <SaveIcon />}
+                </button>
+              )}
               <button
                 onClick={() => setCollapsed(!collapsed)}
                 aria-label={collapsed ? "Abrir tarjeta" : "Cerrar tarjeta"}
