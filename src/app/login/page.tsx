@@ -23,11 +23,12 @@ export default function LoginPage() {
       if (error) setMsg(error.message);
       else router.replace("/");
     } else {
-      const { error } = await supabase.auth.signUp({ email, password });
+      const { data, error } = await supabase.auth.signUp({ email, password });
       if (error) setMsg(error.message);
+      else if (data.session) router.replace("/");
       else
         setMsg(
-          "Cuenta creada. Si pide confirmar correo, revísalo; si no, ya puedes entrar."
+          "Cuenta creada. Revisa tu correo para confirmar y luego inicia sesión."
         );
     }
     setBusy(false);
