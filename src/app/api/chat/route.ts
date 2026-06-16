@@ -60,7 +60,11 @@ export async function POST(req: Request) {
       messages: aiMessages,
     });
 
-    const geo = p.locationQuery ? await geocode(p.locationQuery) : null;
+    // Geocodifica la mejor pista de ubicación: locationQuery o, si no, la dirección leída.
+    const locHint = p.locationQuery ?? p.addressText ?? null;
+    const query =
+      locHint && !/panam/i.test(locHint) ? `${locHint}, Panamá` : locHint;
+    const geo = query ? await geocode(query) : null;
 
     // Merge: la IA actualiza/añade, nunca borra con null lo que ya existía.
     const updatedCard: Card = {
