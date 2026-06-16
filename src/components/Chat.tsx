@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import CameraCapture from "@/components/CameraCapture";
 
 export type ChatMessage = {
   role: "user" | "assistant";
@@ -124,13 +125,13 @@ export default function Chat({
   const [input, setInput] = useState("");
   const [recording, setRecording] = useState(false);
   const [seconds, setSeconds] = useState(0);
+  const [showCamera, setShowCamera] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
   const recorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const cancelRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
-  const scanInputRef = useRef<HTMLInputElement>(null);
 
   function stopTimer() {
     if (timerRef.current) {
@@ -264,7 +265,7 @@ export default function Chat({
           </button>
           <button
             type="button"
-            onClick={() => scanInputRef.current?.click()}
+            onClick={() => setShowCamera(true)}
             className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-neutral-900 px-2 py-1.5 text-xs font-medium text-neutral-200 ring-1 ring-white/10 transition hover:bg-neutral-800"
           >
             <ScanIcon />
@@ -285,19 +286,6 @@ export default function Chat({
           e.target.value = "";
         }}
       />
-      <input
-        ref={scanInputRef}
-        type="file"
-        accept="image/*"
-        capture="environment"
-        className="hidden"
-        onChange={(e) => {
-          const f = e.target.files?.[0];
-          if (f) onImage(f, "escaneo");
-          e.target.value = "";
-        }}
-      />
-
       {/* Input de texto */}
       <form onSubmit={submit} className="flex items-center gap-2 px-3 py-2.5">
         <input
@@ -314,6 +302,13 @@ export default function Chat({
           {busy ? "…" : "Enviar"}
         </button>
       </form>
+
+      {showCamera && (
+        <CameraCapture
+          onCapture={(f) => onImage(f, "escaneo")}
+          onClose={() => setShowCamera(false)}
+        />
+      )}
     </div>
   );
 }
