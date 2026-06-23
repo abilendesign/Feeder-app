@@ -81,9 +81,10 @@ export default async function Perfil() {
             {cards.map((c) => {
               const d = c.data;
               return (
-                <div
+                <Link
                   key={c.id}
-                  className="rounded-xl bg-white p-3 text-black shadow ring-1 ring-black/10"
+                  href={`/?load=${c.id}`}
+                  className="block rounded-xl bg-white p-3 text-black shadow ring-1 ring-black/10 transition hover:ring-[#d6ff00] hover:ring-2"
                 >
                   <div className="mb-1 h-1 w-8 rounded bg-[#d6ff00]" />
                   <p className="truncate text-sm font-semibold">
@@ -98,7 +99,7 @@ export default async function Perfil() {
                       {d.price} {d.currency ?? ""}
                     </p>
                   )}
-                </div>
+                </Link>
               );
             })}
           </div>

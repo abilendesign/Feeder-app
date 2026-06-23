@@ -21,8 +21,27 @@ export default function Home() {
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [hydrated, setHydrated] = useState(false);
 
-  // Restaura chat + tarjeta al volver de otra pestaña (ej. Perfil) o al refrescar.
+  // Carga una card guardada (?load=id) o restaura el chat/tarjeta de localStorage.
   useEffect(() => {
+    const loadId = new URLSearchParams(window.location.search).get("load");
+    if (loadId) {
+      (async () => {
+        try {
+          const res = await fetch(`/api/cards?id=${loadId}`);
+          const d = await res.json();
+          if (res.ok && d.card) {
+            setCard({ ...emptyCard, ...d.card, photos: d.card.photos ?? [] });
+            setSavedId(d.id);
+            setMessages([]);
+          }
+        } catch {
+          // si falla, queda la tarjeta vacía
+        }
+        window.history.replaceState({}, "", "/");
+        setHydrated(true);
+      })();
+      return;
+    }
     try {
       const c = localStorage.getItem("feeder_card");
       const m = localStorage.getItem("feeder_messages");
